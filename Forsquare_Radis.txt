@@ -1,0 +1,41 @@
+#Initial setup
+
+SET next_user_id 0
+SET next_geotag_id 0
+
+#Create user
+
+INCR next_user_id => x (some outer variable)
+HMSET user:x username `username` password `password` name `name` #model
+HSET user_by_username `username` x  #to get user id by username
+
+#Follow user
+
+ZADD followers:`followed_id` `time` `follower_id` #time is to order the set
+
+#Unfollow user
+
+ZREM followers:`followed_id` `follower_id`
+
+#Get followers info
+
+ZCARD followers:`followed_id` #number of followers of a person
+
+#Create geotag
+
+INCR next_geotag_id => x #get next id
+GEOADD geotags `longitude` `latitude` x #for coordinate
+HMSET geotag_meta:x name `name` description `description` publisher `user_id` #for object meta-info
+SADD geotags_by_name `name` x #for search by name of location
+LPUSH geotags_of_user `user_id` x
+
+#Get locations for name
+
+SMEMBERS geotags_by_name `name`
+
+#Search by location
+
+GEORADIUS geotags `current_longitude` `current_latitude` 800 m WITHDIST WITHCOORD ASC # get nearest places with closest on the top
+
+
+
